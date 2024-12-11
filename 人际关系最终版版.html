@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>联系人管理系统</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+    }
+    .left-panel, .right-panel {
+      flex: 1;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .contact-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .modal.active {
+      display: block;
+    }
+    .modal-header {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .modal-footer {
+        margin-top: 20px;
+      text-align: right;
+    }
+    .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 行间距一致 */
+}
+.form-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.form-group label {
+  flex: 1;
+  text-align: left;
+  margin-right: 10px; /* 标签和输入框间距 */
+}
+.form-group input,
+.form-group textarea {
+  flex: 2;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  margin: 0 5px; /* 按钮之间的水平间距 */
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-footer button:hover {
+  background-color: #0056b3;
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 左侧面板 -->
+    <div class="left-panel">
+      <h3>联系人列表</h3>
+      <div id="contact-list">
+        <!-- 联系人列表 -->
+      </div>
+      <button onclick="showAddContactModal()">新增联系人</button>
+    </div>
+
+    <!-- 右侧面板 -->
+    <div class="right-panel">
+      <h3>联系人详情</h3>
+      <div id="contact-details">
+        <p>选择一个联系人以查看详细信息</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑联系人弹窗 -->
+  <div id="add-edit-modal" class="modal">
+    <div class="modal-header">新增/编辑联系人</div>
+    <div class="modal-body">
+        <div class="form-group">
+          <label for="contact-name">姓名:</label>
+          <input type="text" id="contact-name">
+        </div>
+        <div class="form-group">
+          <label for="contact-nickname">昵称:</label>
+          <input type="text" id="contact-nickname">
+        </div>
+        <div class="form-group">
+          <label for="contact-birthday">生日:</label>
+          <input type="date" id="contact-birthday">
+        </div>
+        <div class="form-group">
+          <label for="contact-first-met">初见日:</label>
+          <input type="date" id="contact-first-met">
+        </div>
+        <div class="form-group">
+          <label for="contact-mbti">MBTI:</label>
+          <input type="text" id="contact-mbti">
+        </div>
+        <div class="form-group">
+          <label for="contact-food">喜欢的食物:</label>
+          <input type="text" id="contact-food">
+        </div>
+        <div class="form-group">
+          <label for="contact-taboo">忌口:</label>
+          <input type="text" id="contact-taboo">
+        </div>
+        <div class="form-group">
+          <label for="contact-interests">兴趣:</label>
+          <input type="text" id="contact-interests">
+        </div>
+        <div class="form-group">
+          <label for="contact-notes">备注:</label>
+          <textarea id="contact-notes"></textarea>
+        </div>
+      </div>
+    <div class="modal-footer">
+      <button onclick="saveContact()">保存</button>
+      <button onclick="closeModal('add-edit-modal')">取消</button>
+    </div>
+  </div>
+
+  <!-- 删除联系人确认弹窗 -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-header">确认删除</div>
+    <div class="modal-body">
+      确定要删除这个联系人吗？
+    </div>
+    <div class="modal-footer">
+      <button onclick="confirmDeleteContact()">删除</button>
+      <button onclick="closeModal('delete-modal')">取消</button>
+    </div>
+  </div>
+
+  <!-- 添加时间线弹窗 -->
+  <div id="add-timeline-modal" class="modal">
+    <div class="modal-header">添加时间线</div>
+    <div class="modal-body">
+      <label>时间: <input type="date" id="timeline-date"></label><br>
+      <label>事件: <input type="text" id="timeline-event"></label>
+    </div>
+    <div class="modal-footer">
+      <button onclick="saveTimeline()">保存</button>
+      <button onclick="closeModal('add-timeline-modal')">取消</button>
+    </div>
+  </div>
+
+  <!-- 添加礼物记录弹窗 -->
+  <div id="add-gift-modal" class="modal">
+    <div class="modal-header">添加礼物记录</div>
+    <div class="modal-body">
+      <label>时间: <input type="date" id="gift-date"></label><br>
+      <label>礼物: <input type="text" id="gift-desc"></label><br>
+      <label>发送者: <input type="text" id="gift-sender"></label>
+    </div>
+    <div class="modal-footer">
+      <button onclick="saveGift()">保存</button>
+      <button onclick="closeModal('add-gift-modal')">取消</button>
+    </div>
+  </div>
+
+  <script>
+    let contacts = [];
+    let selectedContactId = null;
+    let deleteContactId = null;
+    let selectedTimelineIndex = null;
+    let selectedGiftIndex = null;
+
+    function showAddContactModal(contactId = null) {
+      selectedContactId = contactId;
+      if (contactId !== null) {
+        const contact = contacts.find(c => c.id === contactId);
+        document.getElementById('contact-name').value = contact.name;
+        document.getElementById('contact-nickname').value = contact.nickname;
+        document.getElementById('contact-birthday').value = contact.birthday;
+        document.getElementById('contact-first-met').value = contact.firstMet;
+        document.getElementById('contact-mbti').value = contact.mbti;
+        document.getElementById('contact-food').value = contact.food;
+        document.getElementById('contact-taboo').value = contact.taboo;
+        document.getElementById('contact-interests').value = contact.interests;
+        document.getElementById('contact-notes').value = contact.notes;
+      } else {
+        document.getElementById('contact-name').value = '';
+        document.getElementById('contact-nickname').value = '';
+        document.getElementById('contact-birthday').value = '';
+        document.getElementById('contact-first-met').value = '';
+        document.getElementById('contact-mbti').value = '';
+        document.getElementById('contact-food').value = '';
+        document.getElementById('contact-taboo').value = '';
+        document.getElementById('contact-interests').value = '';
+        document.getElementById('contact-notes').value = '';
+      }
+      document.getElementById('add-edit-modal').classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function saveContact() {
+      const name = document.getElementById('contact-name').value;
+      const nickname = document.getElementById('contact-nickname').value;
+      const birthday = document.getElementById('contact-birthday').value;
+      const firstMet = document.getElementById('contact-first-met').value;
+      const mbti = document.getElementById('contact-mbti').value;
+      const food = document.getElementById('contact-food').value;
+      const taboo = document.getElementById('contact-taboo').value;
+      const interests = document.getElementById('contact-interests').value;
+      const notes = document.getElementById('contact-notes').value;
+
+      if (!name || !nickname || !birthday || !firstMet) {
+        alert('请填写完整信息！');
+        return;
+      }
+
+      if (selectedContactId !== null) {
+        const contact = contacts.find(c => c.id === selectedContactId);
+        contact.name = name;
+        contact.nickname = nickname;
+        contact.birthday = birthday;
+        contact.firstMet = firstMet;
+        contact.mbti = mbti;
+        contact.food = food;
+        contact.taboo = taboo;
+        contact.interests = interests;
+        contact.notes = notes;
+      } else {
+        contacts.push({
+          id: Date.now(),
+          name,
+          nickname,
+          birthday,
+          firstMet,
+          mbti,
+          food,
+          taboo,
+          interests,
+          notes,
+          events: [],
+          gifts: []
+        });
+      }
+
+      renderContactList();
+      closeModal('add-edit-modal');
+    }
+
+    function renderContactList() {
+      contacts.sort((a, b) => a.name.localeCompare(b.name));
+      const list = document.getElementById('contact-list');
+      list.innerHTML = '';
+      contacts.forEach(contact => {
+        const div = document.createElement('div');
+        div.className = 'contact-card';
+        div.innerHTML = `
+          <h2>${contact.name} (${contact.nickname})</h2>
+          <button onclick="viewContact(${contact.id})">查看详情</button>
+          <button onclick="showAddContactModal(${contact.id})">编辑</button>
+          <button onclick="showDeleteContactModal(${contact.id})">删除</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function showDeleteContactModal(contactId) {
+      deleteContactId = contactId;
+      document.getElementById('delete-modal').classList.add('active');
+    }
+
+    function confirmDeleteContact() {
+      contacts = contacts.filter(c => c.id !== deleteContactId);
+      renderContactList();
+      closeModal('delete-modal');
+    }
+
+    function viewContact(id) {
+      const contact = contacts.find(c => c.id === id);
+      if (!contact) return;
+      selectedContactId = id;
+      const details = document.getElementById('contact-details');
+      details.innerHTML = `
+        <h2>${contact.name} (${contact.nickname})</h2>
+        <p>生日: ${contact.birthday}</p>
+        <p>初见日: ${contact.firstMet}</p>
+        <p>MBTI: ${contact.mbti}</p>
+        <p>喜欢的食物: ${contact.food}</p>
+        <p>忌口: ${contact.taboo}</p>
+        <p>兴趣: ${contact.interests}</p>
+        <p>备注: ${contact.notes}</p>
+        <h3>时间线</h3>
+        <ul id="timeline-list">${contact.events.map((e, i) => `<li>${e.date}: ${e.desc} <button onclick="showAddTimelineModal(${i})">编辑</button> <button onclick="deleteTimeline(${i})">删除</button></li>`).join('')}</ul>
+        <button onclick="showAddTimelineModal()">添加时间线</button>
+        <h3>礼物记录</h3>
+        <ul id="gift-list">${contact.gifts.map((g, i) => `<li>${g.date}: ${g.desc} (${g.sender}) <button onclick="showAddGiftModal(${i})">编辑</button> <button onclick="deleteGift(${i})">删除</button></li>`).join('')}</ul>
+        <button onclick="showAddGiftModal()">添加礼物记录</button>
+      `;
+    }
+
+    function deleteTimeline(index) {
+      const contact = contacts.find(c => c.id === selectedContactId);
+      contact.events.splice(index, 1);
+      viewContact(selectedContactId);
+    }
+
+    function deleteGift(index) {
+      const contact = contacts.find(c => c.id === selectedContactId);
+      contact.gifts.splice(index, 1);
+      viewContact(selectedContactId);
+    }
+
+    function showAddTimelineModal(index = null) {
+      selectedTimelineIndex = index;
+      const contact = contacts.find(c => c.id === selectedContactId);
+      if (index !== null) {
+        document.getElementById('timeline-date').value = contact.events[index].date;
+        document.getElementById('timeline-event').value = contact.events[index].desc;
+      } else {
+        document.getElementById('timeline-date').value = '';
+        document.getElementById('timeline-event').value = '';
+      }
+      document.getElementById('add-timeline-modal').classList.add('active');
+    }
+
+    function saveTimeline() {
+      const date = document.getElementById('timeline-date').value;
+      const event = document.getElementById('timeline-event').value;
+
+      if (!date || !event) {
+        alert('请填写完整时间线信息！');
+        return;
+      }
+
+      const contact = contacts.find(c => c.id === selectedContactId);
+      if (selectedTimelineIndex !== null) {
+        contact.events[selectedTimelineIndex] = { date, desc: event };
+      } else {
+        contact.events.push({ date, desc: event });
+      }
+
+     // 按日期排序
+        contact.events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      closeModal('add-timeline-modal');
+      viewContact(selectedContactId);
+    }
+
+    function showAddGiftModal(index = null) {
+      selectedGiftIndex = index;
+      const contact = contacts.find(c => c.id === selectedContactId);
+      if (index !== null) {
+        document.getElementById('gift-date').value = contact.gifts[index].date;
+        document.getElementById('gift-desc').value = contact.gifts[index].desc;
+        document.getElementById('gift-sender').value = contact.gifts[index].sender;
+      } else {
+        document.getElementById('gift-date').value = '';
+        document.getElementById('gift-desc').value = '';
+        document.getElementById('gift-sender').value = '';
+      }
+      document.getElementById('add-gift-modal').classList.add('active');
+    }
+
+    function saveGift() {
+      const date = document.getElementById('gift-date').value;
+      const desc = document.getElementById('gift-desc').value;
+      const sender = document.getElementById('gift-sender').value;
+
+      if (!date || !desc || !sender) {
+        alert('请填写完整礼物信息！');
+        return;
+      }
+
+      const contact = contacts.find(c => c.id === selectedContactId);
+      if (selectedGiftIndex !== null) {
+        contact.gifts[selectedGiftIndex] = { date, desc, sender };
+      } else {
+        contact.gifts.push({ date, desc, sender });
+        }
+
+        // 按日期排序
+        contact.gifts.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+      closeModal('add-gift-modal');
+      viewContact(selectedContactId);
+    }
+  </script>
+</body>
+</html>
